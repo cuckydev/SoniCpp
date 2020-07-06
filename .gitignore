@@ -1,0 +1,6 @@
+# Exclude the build directory
+/build
+
+# Exclude potential binaries
+bin/SoniCpp
+bin/SoniCpp.exe
