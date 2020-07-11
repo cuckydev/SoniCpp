@@ -61,7 +61,7 @@ namespace SCPP
 			struct Config
 			{
 				std::string title;
-				unsigned int width, height, scale;
+				unsigned int width = 0, height = 0, scale;
 				unsigned int framerate;
 				bool fullscreen;
 			};

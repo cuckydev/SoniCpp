@@ -10,13 +10,14 @@ Authors: Regan "cuckydev" Green
 //Declaration
 #include "Engine.h"
 
+//Hardware classes
+#include "VDP.h"
+
 //Backends
 #ifdef SCPP_COMPILE_SDL2
 	#include "Backend/SDL2/Core.h"
 	#include "Backend/SDL2/Render.h"
 #endif
-
-#include <iostream>
 
 //SoniC++ namespace
 namespace SCPP
@@ -82,18 +83,10 @@ namespace SCPP
 		
 		bool Instance::Start()
 		{
-			SCPP::Backend::Render::PixelFormat pixel_format = render->GetPixelFormat();
-			for (int i = 0; ; i += 426)
-			{
-				unsigned int *data;
-				int pitch;
-				if ((data = (unsigned int*)render->StartFrame(&pitch)) == nullptr)
-					return error.Push(render->GetError());
-				for (int v = 0; v <= i; v++)
-					*data++ = pixel_format.MapRGBA(0x00, 0x80, 0x80, 0xFF);
-				if (render->EndFrame())
-					return error.Push(render->GetError());
-			}
+			//Initialize VDP
+			SCPP::VDP::Instance vdp;
+			if (vdp.Allocate(2048, 4))
+				return error.Push(vdp.GetError());
 			return false;
 		}
 	}

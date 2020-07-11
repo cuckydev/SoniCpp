@@ -37,6 +37,15 @@ namespace SCPP
 			//Render interface
 			bool SDL2::SetConfig(const Config &_config)
 			{
+				//Get width and height to use
+				unsigned int use_width = _config.width, use_height = _config.height;
+				if (use_width == 0)
+					if ((use_width = config.width) == 0)
+						return error.Push("Width of 0 can't be used");
+				if (use_height == 0)
+					if ((use_height = config.height) == 0)
+						return error.Push("Height of 0 can't be used");
+				
 				//Create window, renderer, and texture
 				if (window == nullptr || renderer == nullptr || texture == nullptr)
 				{
@@ -49,7 +58,7 @@ namespace SCPP
 						SDL_DestroyWindow(window);
 					
 					SDL_DisplayMode display_mode;
-					if (/* Create window */		(window = SDL_CreateWindow(_config.title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _config.width * _config.scale, _config.height * _config.scale, _config.fullscreen ? SDL_WINDOW_FULLSCREEN : 0)) == nullptr ||
+					if (/* Create window */		(window = SDL_CreateWindow(_config.title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, use_width * _config.scale, use_height * _config.scale, _config.fullscreen ? SDL_WINDOW_FULLSCREEN : 0)) == nullptr ||
 						/* Determine VSync */	(GetDisplayMode(&display_mode, _config.framerate) == 0) ||
 						/* Create renderer */	(renderer = SDL_CreateRenderer(window, -1, vsync_multiple ? SDL_RENDERER_PRESENTVSYNC : 0)) == nullptr ||
 						/* Get window's display mode for texture */ SDL_GetWindowDisplayMode(window, &display_mode) < 0 ||
@@ -79,11 +88,11 @@ namespace SCPP
 				else
 				{
 					//Resize window if size changed
-					if (_config.width != config.width || _config.height != _config.height || _config.scale != config.scale)
-						SDL_SetWindowSize(window, _config.width * _config.scale, _config.height * _config.scale);
+					if (use_width != config.width || use_height != config.height || _config.scale != config.scale)
+						SDL_SetWindowSize(window, use_width * _config.scale, use_height * _config.scale);
 					
 					//Recreate texture if width or height changed
-					if (_config.framerate != config.framerate || _config.width != config.width || _config.height != _config.height)
+					if (_config.framerate != config.framerate || use_width != config.width || use_height != config.height)
 					{
 						//Delete old texture
 						if (texture != nullptr)
@@ -97,6 +106,8 @@ namespace SCPP
 				
 				//Use given configuration
 				config = _config;
+				config.width = use_width;
+				config.height = use_height;
 				return false;
 			}
 			

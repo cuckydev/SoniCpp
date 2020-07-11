@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 		//Render configuration
 		{
 			"SoniC++", //Title
-			426, 240, 2, //Dimensions and scale
+			320, 240, 2, //Dimensions and scale
 			60, //Framerate
 			false, //Fullscreen
 		}

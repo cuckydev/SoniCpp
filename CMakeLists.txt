@@ -18,6 +18,8 @@ add_executable(SoniCpp WIN32
 	"src/Error.h"
 	"src/Engine.cpp"
 	"src/Engine.h"
+	"src/VDP.cpp"
+	"src/VDP.h"
 	"src/Backend/Core.h"
 	"src/Backend/Render.h"
 )
