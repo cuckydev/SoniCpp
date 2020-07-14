@@ -104,6 +104,9 @@ namespace SCPP
 			
 			//Test palette
 			SCPP::VDP::Palette *palette = vdp.GetPalette(0);
+			//palette->colour[0].r.value = 0xE;
+			//palette->colour[0].g.value = 0xE;
+			//palette->colour[0].b.value = 0xE;
 			palette->colour[1].r.value = 0xE;
 			palette->colour[2].g.value = 0xE;
 			palette->colour[3].b.value = 0xE;
@@ -137,7 +140,7 @@ namespace SCPP
 			//VDP test loop
 			const SCPP::Backend::Render::Config &render_config = render->GetConfig();
 			const SCPP::Backend::Render::PixelFormat &render_pixel_format = render->GetPixelFormat();
-			
+			int timer = 30;
 			do
 			{
 				//Start frame and send output information to VDP
@@ -148,8 +151,33 @@ namespace SCPP
 				vdp.SetOutput(output);
 				
 				//Setup frame
-				test_sprite->x++;
-				test_sprite->y++;
+				if (--timer <= 0)
+				{
+					timer = 30;
+					switch ((test_sprite->y_flip << 1) | test_sprite->x_flip)
+					{
+						case 0:
+							test_sprite->x_flip = true;
+							test_sprite->y_flip = false;
+							break;
+						case 1:
+							test_sprite->x_flip = false;
+							test_sprite->y_flip = true;
+							break;
+						case 2:
+							test_sprite->x_flip = true;
+							test_sprite->y_flip = true;
+							break;
+						case 3:
+							test_sprite->x_flip = false;
+							test_sprite->y_flip = false;
+							if (test_sprite->width)
+								test_sprite->width--;
+							else if (test_sprite->height)
+								test_sprite->height--;
+							break;
+					}
+				}
 				vdp.SetHeadSprite(test_sprite);
 				
 				//Draw entire screen

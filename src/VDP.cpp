@@ -14,8 +14,9 @@ Note: This code isn't very good. I designed it in hopes that it'll run as
       it any cleaner.
 */
 
-//Memcpy
+//Memcpy and fill_n
 #include <string.h>
+#include <algorithm>
 
 //Declaration
 #include "VDP.h"
@@ -77,8 +78,9 @@ namespace SCPP
 			unsigned int height = to - from + PAD_D;
 			
 			T *buffer;
-			if ((buffer = new T[width * height]{}) == nullptr)
+			if ((buffer = new T[width * height]) == nullptr)
 				return error.Push("Failed to allocate padded buffer");
+			std::fill_n(buffer, width * height, palette[0].colour[0].value);
 			
 			//Allocate composite mask buffer
 			uint8_t *composite;
@@ -138,75 +140,85 @@ namespace SCPP
 					continue;
 				
 				//Remember some other information
+				uint8_t cmp_tst = s->priority ? 0 : (COMPOSITE_PLANEA_HI | COMPOSITE_PLANEB_HI);
 				uint8_t cmp_set = s->priority ? COMPOSITE_SPRITE_HI : 0;
 				
-				//Write sprite to buffer
+				//Determine how the sprite is to be written
+				uint8_t *src;
+				T *dst;
+				uint8_t *cmp;
+				int src_inc_byte, src_inc_long;
+				int dst_inc_long, dst_inc_column;
+				uint8_t mskl, shfl, mskr, shfr;
+				
 				switch ((s->y_flip << 1) | s->x_flip)
 				{
 					case 0x0: //00
-					{
-						uint8_t *src = pattern + (s->pattern * (4 * 8));
-						T *dst = buffer + (sprite_top * width + sprite_left);
-						uint8_t *cmp = composite + (sprite_top * width + sprite_left);
-						for (unsigned int x = 0; x <= s->width; x++)
-						{
-							for (int y = sprite_top; y < sprite_bottom; y++)
-							{
-								if (composite[y * width] & COMPOSITE_SPRITE_MASK)
-									continue;
-								WRITE_BYTE(dst, cmp, src, 0xF0, 4, 0x0F, 0, s->palette, 0, cmp_set) src++;
-								WRITE_BYTE(dst, cmp, src, 0xF0, 4, 0x0F, 0, s->palette, 0, cmp_set) src++;
-								WRITE_BYTE(dst, cmp, src, 0xF0, 4, 0x0F, 0, s->palette, 0, cmp_set) src++;
-								WRITE_BYTE(dst, cmp, src, 0xF0, 4, 0x0F, 0, s->palette, 0, cmp_set) src++;
-								dst += width - 8;
-							}
-							dst -= width * sprite_height - 8;
-						}
+						src = pattern + (s->pattern * (4 * 8));
+						dst = buffer + (sprite_top * width + sprite_left);
+						cmp = composite + (sprite_top * width + sprite_left);
+						src_inc_byte = 1;
+						src_inc_long = 0;
+						dst_inc_long = width - 8;
+						dst_inc_column = -(width * sprite_height - 8);
+						mskl = 0xF0; shfl = 4;
+						mskr = 0x0F; shfr = 0;
 						break;
-					}
 					case 0x1: //01
-					{
-						uint8_t *src = pattern + (s->pattern * (4 * 8) + 3);
-						T *dst = buffer + (sprite_top * width + sprite_right - 8);
-						uint8_t *cmp = composite + (sprite_top * width + sprite_right - 8);
-						for (unsigned int x = 0; x <= s->width; x++)
-						{
-							for (int y = sprite_top; y < sprite_bottom; y++)
-							{
-								if (composite[y * width] & COMPOSITE_SPRITE_MASK)
-									continue;
-								WRITE_BYTE(dst, cmp, src, 0x0F, 0, 0xF0, 4, s->palette, 0, cmp_set) src--;
-								WRITE_BYTE(dst, cmp, src, 0x0F, 0, 0xF0, 4, s->palette, 0, cmp_set) src--;
-								WRITE_BYTE(dst, cmp, src, 0x0F, 0, 0xF0, 4, s->palette, 0, cmp_set) src--;
-								WRITE_BYTE(dst, cmp, src, 0x0F, 0, 0xF0, 4, s->palette, 0, cmp_set) src--;
-								src += 8;
-								dst += width - 8;
-							}
-							dst -= width * sprite_height + 8;
-						}
+						src = pattern + (s->pattern * (4 * 8) + 3);
+						dst = buffer + (sprite_top * width + sprite_right - 8);
+						cmp = composite + (sprite_top * width + sprite_right - 8);
+						src_inc_byte = -1;
+						src_inc_long = 8;
+						dst_inc_long = width - 8;
+						dst_inc_column = -(width * sprite_height + 8);
+						mskl = 0x0F; shfl = 0;
+						mskr = 0xF0; shfr = 4;
 						break;
-					}
 					case 0x2: //10
-					{
-						uint8_t *src = pattern + (s->pattern * (4 * 8));
-						T *dst = buffer + ((sprite_bottom - 1) * width + sprite_left);
-						uint8_t *cmp = composite + ((sprite_bottom - 1) * width + sprite_left);
-						for (unsigned int x = 0; x <= s->width; x++)
-						{
-							for (int y = sprite_top; y < sprite_bottom; y++)
-							{
-								if (composite[y * width] & COMPOSITE_SPRITE_MASK)
-									continue;
-								WRITE_BYTE(dst, cmp, src, 0xF0, 4, 0x0F, 0, s->palette, 0, cmp_set) src++;
-								WRITE_BYTE(dst, cmp, src, 0xF0, 4, 0x0F, 0, s->palette, 0, cmp_set) src++;
-								WRITE_BYTE(dst, cmp, src, 0xF0, 4, 0x0F, 0, s->palette, 0, cmp_set) src++;
-								WRITE_BYTE(dst, cmp, src, 0xF0, 4, 0x0F, 0, s->palette, 0, cmp_set) src++;
-								dst -= width + 8;
-							}
-							dst += width * sprite_height + 8;
-						}
+						src = pattern + (s->pattern * (4 * 8));
+						dst = buffer + ((sprite_bottom - 1) * width + sprite_left);
+						cmp = composite + ((sprite_bottom - 1) * width + sprite_left);
+						src_inc_byte = 1;
+						src_inc_long = 0;
+						dst_inc_long = -(width + 8);
+						dst_inc_column = width * sprite_height + 8;
+						mskl = 0xF0; shfl = 4;
+						mskr = 0x0F; shfr = 0;
 						break;
+					case 0x3: //11
+						src = pattern + (s->pattern * (4 * 8) + 3);
+						dst = buffer + ((sprite_bottom - 1) * width + sprite_right - 8);
+						cmp = composite + ((sprite_bottom - 1) * width + sprite_right - 8);
+						src_inc_byte = -1;
+						src_inc_long = 8;
+						dst_inc_long = -(width + 8);
+						dst_inc_column = width * sprite_height - 8;
+						mskl = 0x0F; shfl = 0;
+						mskr = 0xF0; shfr = 4;
+						break;
+				}
+				
+				for (unsigned int x = 0; x <= s->width; x++)
+				{
+					for (int y = sprite_top; y < sprite_bottom; y++)
+					{
+						if (composite[y * width] & COMPOSITE_SPRITE_MASK)
+							continue;
+						WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, s->palette, 0, cmp_set) src += src_inc_byte;
+						WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, s->palette, 0, cmp_set) src += src_inc_byte;
+						WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, s->palette, 0, cmp_set) src += src_inc_byte;
+						WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, s->palette, 0, cmp_set) src += src_inc_byte;
+						src += src_inc_long;
+						dst += dst_inc_long;
+						cmp += dst_inc_long;
 					}
+					dst += dst_inc_column;
+					cmp += dst_inc_column;
+				}
+				/*
+				switch ((s->y_flip << 1) | s->x_flip)
+				{
 					case 0x3: //11
 					{
 						uint8_t *src = pattern + (s->pattern * (4 * 8) + 3);
@@ -230,6 +242,7 @@ namespace SCPP
 						break;
 					}
 				}
+				*/
 			}
 			
 			//Copy padded buffer to output buffer
