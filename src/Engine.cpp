@@ -87,6 +87,75 @@ namespace SCPP
 			SCPP::VDP::Instance vdp;
 			if (vdp.Allocate(2048, 4))
 				return error.Push(vdp.GetError());
+			
+			//Test graphic
+			uint8_t *graphic = vdp.GetPattern(0);
+			for (size_t i = 0; i < 2048; i++)
+			{
+				*graphic++ = 0x11+i; *graphic++ = 0x11; *graphic++ = 0x11; *graphic++ = 0x11;
+				*graphic++ = 0x12; *graphic++ = 0x22; *graphic++ = 0x22; *graphic++ = 0x21;
+				*graphic++ = 0x12; *graphic++ = 0x30; *graphic++ = 0x00; *graphic++ = 0x21;
+				*graphic++ = 0x12; *graphic++ = 0x03; *graphic++ = 0x00; *graphic++ = 0x21;
+				*graphic++ = 0x12; *graphic++ = 0x00; *graphic++ = 0x30; *graphic++ = 0x21;
+				*graphic++ = 0x12; *graphic++ = 0x00; *graphic++ = 0x03; *graphic++ = 0x21;
+				*graphic++ = 0x12; *graphic++ = 0x22; *graphic++ = 0x22; *graphic++ = 0x21;
+				*graphic++ = 0x11; *graphic++ = 0x11; *graphic++ = 0x11; *graphic++ = 0x11;
+			}
+			
+			//Test palette
+			SCPP::VDP::Palette *palette = vdp.GetPalette(0);
+			palette->colour[1].r.value = 0xE;
+			palette->colour[2].g.value = 0xE;
+			palette->colour[3].b.value = 0xE;
+			palette->colour[4].r.value = 0xC;
+			palette->colour[5].g.value = 0xC;
+			palette->colour[6].b.value = 0xC;
+			palette->colour[7].r.value = 0xA;
+			palette->colour[8].g.value = 0xA;
+			palette->colour[9].b.value = 0xA;
+			palette->colour[10].r.value = 0x8;
+			palette->colour[11].g.value = 0x8;
+			palette->colour[12].b.value = 0x8;
+			palette->colour[13].r.value = 0x6;
+			palette->colour[14].g.value = 0x6;
+			palette->colour[15].b.value = 0x6;
+			
+			//Test sprite
+			SCPP::VDP::Sprite *test_sprite = new SCPP::VDP::Sprite{
+				0,
+				0,
+				false,
+				true,
+				true,
+				0x80,
+				0x80,
+				3,
+				3,
+				nullptr
+			};
+			
+			//VDP test loop
+			const SCPP::Backend::Render::Config &render_config = render->GetConfig();
+			const SCPP::Backend::Render::PixelFormat &render_pixel_format = render->GetPixelFormat();
+			
+			do
+			{
+				//Start frame and send output information to VDP
+				unsigned int pitch;
+				void *buffer = render->StartFrame(&pitch);
+				
+				SCPP::VDP::Output output = {buffer, render_pixel_format, render_config.width, render_config.height, pitch};
+				vdp.SetOutput(output);
+				
+				//Setup frame
+				test_sprite->x++;
+				test_sprite->y++;
+				vdp.SetHeadSprite(test_sprite);
+				
+				//Draw entire screen
+				vdp.WriteScanlines(0, render_config.height);
+			} while (!render->EndFrame());
+			
 			return false;
 		}
 	}

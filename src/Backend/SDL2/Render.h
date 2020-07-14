@@ -48,7 +48,7 @@ namespace SCPP
 					//Render interface
 					bool SetConfig(const Config &_config);
 					
-					void *StartFrame(int *pitch);
+					void *StartFrame(unsigned int *pitch);
 					bool EndFrame();
 					
 				private:

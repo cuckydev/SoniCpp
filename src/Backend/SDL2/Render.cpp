@@ -111,15 +111,18 @@ namespace SCPP
 				return false;
 			}
 			
-			void *SDL2::StartFrame(int *pitch)
+			void *SDL2::StartFrame(unsigned int *pitch)
 			{
 				//Lock texture
 				void *data;
-				if (SDL_LockTexture(texture, nullptr, &data, pitch) < 0)
+				int signed_pitch;
+				if (SDL_LockTexture(texture, nullptr, &data, &signed_pitch) < 0)
 				{
 					error.Push(SDL_GetError());
 					return nullptr;
 				}
+				if (pitch != nullptr)
+					*pitch = signed_pitch / pixel_format.bytes_per_pixel;
 				return data;
 			}
 			

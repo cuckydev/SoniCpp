@@ -89,7 +89,7 @@ namespace SCPP
 					
 					const PixelFormat &GetPixelFormat() const { return pixel_format; }
 					
-					virtual void *StartFrame(int *pitch) = 0;
+					virtual void *StartFrame(unsigned int *pitch) = 0;
 					virtual bool EndFrame() = 0;
 					
 					//Get error

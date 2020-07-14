@@ -13,6 +13,9 @@ Authors: Regan "cuckydev" Green
 #include <stdint.h>
 #include <array>
 
+//Compiler attributes
+#include "Attributes.h"
+
 //Backend classes
 #include "Backend/Render.h"
 
@@ -25,28 +28,40 @@ namespace SCPP
 		//VDP output
 		struct Output
 		{
-			void *buffer;
+			void *buffer = nullptr;
 			SCPP::Backend::Render::PixelFormat pixel_format;
-			unsigned int width, pitch, height;
+			unsigned int width, height, pitch;
 		};
 		
 		//VDP types
 		static const uint8_t colour_lut[8] = {0, 52, 87, 116, 144, 172, 206, 255};
 		
+		struct ColourValue
+		{
+			union
+			{
+				uint8_t value : 4;
+				uint8_t _ = 0;
+			};
+			
+			uint8_t GetLevel() { return colour_lut[value >> 1]; }
+		};
+		
 		struct Colour
 		{
-			uint8_t r : 4;
-			uint8_t g : 4;
-			uint8_t b : 4;
-			uint32_t value;
+			ColourValue r;
+			ColourValue g;
+			ColourValue b;
+			uint32_t value = 0;
 			
 			void MapValue(const SCPP::Backend::Render::PixelFormat &pixel_format)
-			{ value = pixel_format.MapRGB(colour_lut[r >> 1], colour_lut[g >> 1], colour_lut[b >> 1]); }
+			{ value = pixel_format.MapRGB(r.GetLevel(), g.GetLevel(), b.GetLevel()); }
 		};
 		
 		struct Palette
 		{
 			std::array<Colour, 16> colour;
+			
 			void MapValue(const SCPP::Backend::Render::PixelFormat &pixel_format)
 			{
 				for (auto &i : colour)
@@ -118,11 +133,15 @@ namespace SCPP
 					sprite = nullptr;
 				}
 				
-				template <typename T>
-				void WriteScanlines(const unsigned from, const unsigned to);
+				bool WriteScanlines(const unsigned int from, const unsigned int to);
 				
 				//Get error
 				const SCPP::Error &GetError() const { return error; }
+				
+			private:
+				//Internal VDP interface
+				template <typename T>
+				ATTRIBUTE_HOT bool WriteScanlines_Internal(const unsigned int from, const unsigned int to);
 		};
 	}
 }
