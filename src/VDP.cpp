@@ -95,18 +95,19 @@ namespace SCPP
 			#define COMPOSITE_PLANEA_HI		0x04	//00000100
 			#define COMPOSITE_PLANEB_HI		0x08	//00001000
 			
-			#define WRITE_NIBBLE(dst, cmp, src, msk, shf, pal, tst, set)	\
-				if ((*src & msk) && !(*cmp & tst))							\
-				{															\
-					*dst = palette[pal].colour[(*src >> shf) & 0xF].value;	\
-					*cmp |= set;											\
-				}															\
-				dst++;														\
+			#define WRITE_NIBBLE(dst, cmp, src, msk, shf, pal, tst, set, clr)	\
+				if ((*src & msk) && !(*cmp & tst))								\
+				{																\
+					*dst = palette[pal].colour[(*src >> shf) & 0xF].value;		\
+					*cmp |= set;												\
+					*cmp &= ~clr;												\
+				}																\
+				dst++;															\
 				cmp++;
 			
-			#define WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, pal, tst, set)	\
-				WRITE_NIBBLE(dst, cmp, src, mskl, shfl, pal, tst, set)					\
-				WRITE_NIBBLE(dst, cmp, src, mskr, shfr, pal, tst, set)					\
+			#define WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, pal, tst, set, clr)	\
+				WRITE_NIBBLE(dst, cmp, src, mskl, shfl, pal, tst, set, clr)					\
+				WRITE_NIBBLE(dst, cmp, src, mskr, shfr, pal, tst, set, clr)					\
 			
 			//Draw sprites
 			for (Sprite *s = sprite; s != nullptr; s = s->next)
@@ -142,6 +143,7 @@ namespace SCPP
 				//Remember some other information
 				uint8_t cmp_tst = s->priority ? 0 : (COMPOSITE_PLANEA_HI | COMPOSITE_PLANEB_HI);
 				uint8_t cmp_set = s->priority ? COMPOSITE_SPRITE_HI : 0;
+				uint8_t cmp_clr = s->priority ? 0 : COMPOSITE_SPRITE_HI;
 				
 				//Determine how the sprite is to be written
 				uint8_t *src;
@@ -199,16 +201,17 @@ namespace SCPP
 						break;
 				}
 				
+				//Write sprite
 				for (unsigned int x = 0; x <= s->width; x++)
 				{
 					for (int y = sprite_top; y < sprite_bottom; y++)
 					{
 						if (composite[y * width] & COMPOSITE_SPRITE_MASK)
 							continue;
-						WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, s->palette, 0, cmp_set) src += src_inc_byte;
-						WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, s->palette, 0, cmp_set) src += src_inc_byte;
-						WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, s->palette, 0, cmp_set) src += src_inc_byte;
-						WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, s->palette, 0, cmp_set) src += src_inc_byte;
+						WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, s->palette, cmp_tst, cmp_set, cmp_clr) src += src_inc_byte;
+						WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, s->palette, cmp_tst, cmp_set, cmp_clr) src += src_inc_byte;
+						WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, s->palette, cmp_tst, cmp_set, cmp_clr) src += src_inc_byte;
+						WRITE_BYTE(dst, cmp, src, mskl, shfl, mskr, shfr, s->palette, cmp_tst, cmp_set, cmp_clr) src += src_inc_byte;
 						src += src_inc_long;
 						dst += dst_inc_long;
 						cmp += dst_inc_long;
@@ -216,40 +219,14 @@ namespace SCPP
 					dst += dst_inc_column;
 					cmp += dst_inc_column;
 				}
-				/*
-				switch ((s->y_flip << 1) | s->x_flip)
-				{
-					case 0x3: //11
-					{
-						uint8_t *src = pattern + (s->pattern * (4 * 8) + 3);
-						T *dst = buffer + ((sprite_bottom - 1) * width + sprite_right - 8);
-						uint8_t *cmp = composite + ((sprite_bottom - 1) * width + sprite_right - 8);
-						for (unsigned int x = 0; x <= s->width; x++)
-						{
-							for (int y = sprite_top; y < sprite_bottom; y++)
-							{
-								if (composite[y * width] & COMPOSITE_SPRITE_MASK)
-									continue;
-								WRITE_BYTE(dst, cmp, src, 0x0F, 0, 0xF0, 4, s->palette, 0, cmp_set) src--;
-								WRITE_BYTE(dst, cmp, src, 0x0F, 0, 0xF0, 4, s->palette, 0, cmp_set) src--;
-								WRITE_BYTE(dst, cmp, src, 0x0F, 0, 0xF0, 4, s->palette, 0, cmp_set) src--;
-								WRITE_BYTE(dst, cmp, src, 0x0F, 0, 0xF0, 4, s->palette, 0, cmp_set) src--;
-								src += 8;
-								dst -= width + 8;
-							}
-							dst += width * sprite_height - 8;
-						}
-						break;
-					}
-				}
-				*/
 			}
 			
 			//Copy padded buffer to output buffer
 			for (unsigned int y = from; y < to; y++)
-				memcpy((T*)output.buffer + (y * output.pitch), buffer + ((y + PAD_R) * width + PAD_R), output.width * sizeof(T));
+				std::copy_n(buffer + ((y + PAD_R) * width + PAD_R), output.width, (T*)output.buffer + (y * output.pitch));
 			
-			//Delete composite buffer
+			//Delete buffers
+			delete[] buffer;
 			delete[] composite;
 			return false;
 		}
