@@ -1,7 +1,7 @@
 /*
 Project: SoniC++
 
-File: src/Level/GameMode.h
+File: src/Game/GameMode.h
 Purpose: Define the level game mode class
 
 Authors: Regan "cuckydev" Green
@@ -13,8 +13,8 @@ Authors: Regan "cuckydev" Green
 //SoniC++ namespace
 namespace SCPP
 {
-	//Level namespace
-	namespace Level
+	//Game namespace
+	namespace Game
 	{
 		//Constructor
 		GameMode::GameMode(SCPP::Engine::Instance *_engine) : engine(_engine)

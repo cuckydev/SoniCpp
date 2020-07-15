@@ -3,8 +3,8 @@
 /*
 Project: SoniC++
 
-File: src/Level/GameMode.h
-Purpose: Declare the level game mode class
+File: src/Game/GameMode.h
+Purpose: Declare the game game mode class
 
 Authors: Regan "cuckydev" Green
 */
@@ -18,8 +18,8 @@ Authors: Regan "cuckydev" Green
 //SoniC++ namespace
 namespace SCPP
 {
-	//Level namespace
-	namespace Level
+	//Game namespace
+	namespace Game
 	{
 		//Game mode class
 		class GameMode : public SCPP::GameMode

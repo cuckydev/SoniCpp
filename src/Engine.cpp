@@ -18,7 +18,7 @@ Authors: Regan "cuckydev" Green
 #endif
 
 //Game classes
-#include "Level/GameMode.h"
+#include "Game/GameMode.h"
 
 //SoniC++ namespace
 namespace SCPP
@@ -96,7 +96,7 @@ namespace SCPP
 				return error.Push(vdp.GetError());
 			
 			//Initialize and run game (start with level game mode)
-			if ((game_mode = new SCPP::Level::GameMode(this)) == nullptr)
+			if ((game_mode = new SCPP::Game::GameMode(this)) == nullptr)
 				return error.Push("Failed to create level game mode instance");
 			
 			while (game_mode != nullptr)
