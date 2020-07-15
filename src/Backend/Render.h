@@ -57,6 +57,7 @@ namespace SCPP
 				uint32_t MapRGB(uint8_t r, uint8_t g, uint8_t b) const { return MapRGBA(r, g, b, 0xFF); }
 				void GetRGB(uint32_t rgb, uint8_t *r, uint8_t *g, uint8_t *b) const { GetRGBA(rgb, r, g, b, nullptr); }
 			};
+			
 			//Render configuration
 			struct Config
 			{

@@ -15,6 +15,12 @@ Authors: Regan "cuckydev" Green
 //Backend classes
 #include "Backend/Core.h"
 #include "Backend/Render.h"
+#include "Backend/Event.h"
+
+//System and game classes
+#include "VDP.h"
+
+#include "GameMode.h"
 
 //SoniC++ namespace
 namespace SCPP
@@ -48,6 +54,13 @@ namespace SCPP
 				//Backend sub-systems
 				SCPP::Backend::Core::Base *core = nullptr;
 				SCPP::Backend::Render::Base *render = nullptr;
+				SCPP::Backend::Event::Base *event = nullptr;
+				
+				//System modules
+				SCPP::VDP::Instance vdp;
+				
+				//Engine state
+				SCPP::GameMode *game_mode = nullptr;
 				
 			public:
 				//Constructors and destructor
@@ -58,6 +71,11 @@ namespace SCPP
 				//Engine interface
 				bool SetConfig(const Config &_config);
 				bool Start();
+				
+				SCPP::Backend::Core::Base *GetCore() { return core; }
+				SCPP::Backend::Render::Base *GetRender() { return render; }
+				SCPP::Backend::Event::Base *GetEvent() { return event; }
+				SCPP::VDP::Instance &GetVDP() { return vdp; }
 				
 				//Get error
 				const SCPP::Error &GetError() const { return error; }

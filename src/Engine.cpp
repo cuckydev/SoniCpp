@@ -10,14 +10,15 @@ Authors: Regan "cuckydev" Green
 //Declaration
 #include "Engine.h"
 
-//Hardware classes
-#include "VDP.h"
-
 //Backends
 #ifdef SCPP_COMPILE_SDL2
 	#include "Backend/SDL2/Core.h"
 	#include "Backend/SDL2/Render.h"
+	#include "Backend/SDL2/Event.h"
 #endif
+
+//Game classes
+#include "Level/GameMode.h"
 
 //SoniC++ namespace
 namespace SCPP
@@ -28,11 +29,13 @@ namespace SCPP
 		//Destructor
 		Instance::~Instance()
 		{
+			//Delete current game mode in case it wasn't already
+			delete game_mode;
+			
 			//Delete backend sub-systems
-			if (render != nullptr)
-				delete render;
-			if (core != nullptr)
-				delete core;
+			delete event;
+			delete render;
+			delete core;
 		}
 		
 		//Engine interface
@@ -42,10 +45,9 @@ namespace SCPP
 			if ((core == nullptr || render == nullptr) || _config.backend != config.backend)
 			{
 				//Delete old backend sub-systems
-				if (render != nullptr)
-					delete render;
-				if (core != nullptr)
-					delete core;
+				delete event;
+				delete render;
+				delete core;
 				
 				//Create new backend sub-systems
 				switch (_config.backend)
@@ -54,6 +56,7 @@ namespace SCPP
 					case Config_Backend::SDL2:
 						core = new SCPP::Backend::Core::SDL2();
 						render = new SCPP::Backend::Render::SDL2();
+						event = new SCPP::Backend::Event::SDL2();
 						break;
 				#endif
 					default:
@@ -72,6 +75,11 @@ namespace SCPP
 			else if (render->GetError())
 				return error.Push(render->GetError());
 			
+			if (event == nullptr)
+				return error.Push("Failed to create backend event sub-system instance");
+			else if (event->GetError())
+				return error.Push(event->GetError());
+			
 			//Set backend configurations
 			if (render->SetConfig(_config.render_config))
 				return error.Push(render->GetError());
@@ -84,106 +92,27 @@ namespace SCPP
 		bool Instance::Start()
 		{
 			//Initialize VDP
-			SCPP::VDP::Instance vdp;
 			if (vdp.Allocate(2048, 4))
 				return error.Push(vdp.GetError());
 			
-			//Test graphic
-			uint8_t *graphic = vdp.GetPattern(0);
-			for (size_t i = 0; i < 2048; i++)
+			//Initialize and run game (start with level game mode)
+			if ((game_mode = new SCPP::Level::GameMode(this)) == nullptr)
+				return error.Push("Failed to create level game mode instance");
+			
+			while (game_mode != nullptr)
 			{
-				*graphic++ = 0x11+i; *graphic++ = 0x11; *graphic++ = 0x11; *graphic++ = 0x11;
-				*graphic++ = 0x12; *graphic++ = 0x22; *graphic++ = 0x22; *graphic++ = 0x21;
-				*graphic++ = 0x12; *graphic++ = 0x30; *graphic++ = 0x00; *graphic++ = 0x21;
-				*graphic++ = 0x12; *graphic++ = 0x03; *graphic++ = 0x00; *graphic++ = 0x21;
-				*graphic++ = 0x12; *graphic++ = 0x00; *graphic++ = 0x30; *graphic++ = 0x21;
-				*graphic++ = 0x12; *graphic++ = 0x00; *graphic++ = 0x03; *graphic++ = 0x21;
-				*graphic++ = 0x12; *graphic++ = 0x22; *graphic++ = 0x22; *graphic++ = 0x21;
-				*graphic++ = 0x11; *graphic++ = 0x11; *graphic++ = 0x11; *graphic++ = 0x11;
-			}
-			
-			//Test palette
-			SCPP::VDP::Palette *palette = vdp.GetPalette(0);
-			//palette->colour[0].r.value = 0xE;
-			//palette->colour[0].g.value = 0xE;
-			//palette->colour[0].b.value = 0xE;
-			palette->colour[1].r.value = 0xE;
-			palette->colour[2].g.value = 0xE;
-			palette->colour[3].b.value = 0xE;
-			palette->colour[4].r.value = 0xC;
-			palette->colour[5].g.value = 0xC;
-			palette->colour[6].b.value = 0xC;
-			palette->colour[7].r.value = 0xA;
-			palette->colour[8].g.value = 0xA;
-			palette->colour[9].b.value = 0xA;
-			palette->colour[10].r.value = 0x8;
-			palette->colour[11].g.value = 0x8;
-			palette->colour[12].b.value = 0x8;
-			palette->colour[13].r.value = 0x6;
-			palette->colour[14].g.value = 0x6;
-			palette->colour[15].b.value = 0x6;
-			
-			//Test sprite
-			SCPP::VDP::Sprite *test_sprite = new SCPP::VDP::Sprite{
-				0,
-				0,
-				false,
-				true,
-				true,
-				0x80,
-				0x80,
-				3,
-				3,
-				nullptr
-			};
-			
-			//VDP test loop
-			const SCPP::Backend::Render::Config &render_config = render->GetConfig();
-			const SCPP::Backend::Render::PixelFormat &render_pixel_format = render->GetPixelFormat();
-			int timer = 30;
-			do
-			{
-				//Start frame and send output information to VDP
-				unsigned int pitch;
-				void *buffer = render->StartFrame(&pitch);
-				
-				SCPP::VDP::Output output = {buffer, render_pixel_format, render_config.width, render_config.height, pitch};
-				vdp.SetOutput(output);
-				
-				//Setup frame
-				if (--timer <= 0)
+				SCPP::GameMode *next = game_mode->Iterate();
+				if (game_mode->GetError())
 				{
-					timer = 30;
-					switch ((test_sprite->y_flip << 1) | test_sprite->x_flip)
-					{
-						case 0:
-							test_sprite->x_flip = true;
-							test_sprite->y_flip = false;
-							break;
-						case 1:
-							test_sprite->x_flip = false;
-							test_sprite->y_flip = true;
-							break;
-						case 2:
-							test_sprite->x_flip = true;
-							test_sprite->y_flip = true;
-							break;
-						case 3:
-							test_sprite->x_flip = false;
-							test_sprite->y_flip = false;
-							if (test_sprite->width)
-								test_sprite->width--;
-							else if (test_sprite->height)
-								test_sprite->height--;
-							break;
-					}
+					delete next;
+					return error.Push(game_mode->GetError());
 				}
-				vdp.SetHeadSprite(test_sprite);
-				
-				//Draw entire screen
-				vdp.WriteScanlines(0, render_config.height);
-			} while (!render->EndFrame());
-			
+				if (next != game_mode)
+				{
+					delete game_mode;
+					game_mode = next;
+				}
+			}
 			return false;
 		}
 	}

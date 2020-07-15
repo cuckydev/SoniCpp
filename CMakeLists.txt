@@ -20,8 +20,12 @@ add_executable(SoniCpp WIN32
 	"src/Engine.h"
 	"src/VDP.cpp"
 	"src/VDP.h"
+	"src/GameMode.h"
+	"src/Level/GameMode.cpp"
+	"src/Level/GameMode.h"
 	"src/Backend/Core.h"
 	"src/Backend/Render.h"
+	"src/Backend/Event.h"
 )
 
 target_include_directories(SoniCpp PRIVATE "src")
@@ -45,7 +49,9 @@ if(SCPP_COMPILE_SDL2)
 	target_sources(SoniCpp PRIVATE	"src/Backend/SDL2/Core.cpp"
 									"src/Backend/SDL2/Core.h"
 									"src/Backend/SDL2/Render.cpp"
-									"src/Backend/SDL2/Render.h")
+									"src/Backend/SDL2/Render.h"
+									"src/Backend/SDL2/Event.cpp"
+									"src/Backend/SDL2/Event.h")
 	
 	# Link SDL2
 	find_package(SDL2)

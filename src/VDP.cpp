@@ -14,8 +14,7 @@ Note: This code isn't very good. I designed it in hopes that it'll run as
       it any cleaner.
 */
 
-//Memcpy and fill_n
-#include <string.h>
+//Array filling and copying
 #include <algorithm>
 
 //Declaration
@@ -32,10 +31,8 @@ namespace SCPP
 		Instance::~Instance()
 		{
 			//Unload data
-			if (pattern != nullptr)
-				delete[] pattern;
-			if (palette != nullptr)
-				delete[] palette;
+			delete[] pattern;
+			delete[] palette;
 			DeleteSprites();
 		}
 		
@@ -52,13 +49,11 @@ namespace SCPP
 		
 		bool Instance::Allocate(size_t _patterns, size_t _palettes)
 		{
-			if (pattern != nullptr)
-				delete[] pattern;
+			delete[] pattern;
 			if ((pattern = new uint8_t[(patterns = _patterns) * 4 * 8]{}) == nullptr)
 				return error.Push("Failed to allocate patterns");
 				
-			if (palette != nullptr)
-				delete[] palette;
+			delete[] palette;
 			if ((palette = new Palette[palettes = _palettes]{}) == nullptr)
 				return error.Push("Failed to allocate palettes");
 			return false;
