@@ -72,119 +72,62 @@ namespace SCPP
 				return false;
 			const Mapping::Frame &map_frame = mappings->GetFrame(frame);
 			
-			//Render differently depending on x and y flip
-			switch ((render_flags.y_flip << 1) | render_flags.x_flip)
+			for (auto &i : map_frame)
 			{
-				case 0x0: //00
+				//Construct a new sprite
+				SCPP::VDP::Sprite *spr;
+				if ((spr = new SCPP::VDP::Sprite()) == nullptr)
+					return true;
+				
+				//Fill with data from the piece
+				spr->width = i.width;
+				spr->height = i.height;
+				spr->pattern = art_tile.pattern + i.pattern;
+				spr->palette = art_tile.palette + i.palette;
+				spr->priority = art_tile.priority ^ i.priority;
+				
+				//Use piece coordinates and flipping depending on render flip
+				switch ((render_flags.y_flip << 1) | render_flags.x_flip)
 				{
-					for (auto &i : map_frame)
+					case 0x0: //00
 					{
-						//Construct a new sprite
-						SCPP::VDP::Sprite *spr;
-						if ((spr = new SCPP::VDP::Sprite()) == nullptr)
-							return true;
-						
-						//Fill with data from the mapping
+						spr->x = x + i.x;
 						spr->y = y + i.y;
-						spr->width = i.width;
-						spr->height = i.height;
-						spr->pattern = art_tile.pattern + i.pattern;
 						spr->x_flip = i.x_flip;
 						spr->y_flip = i.y_flip;
-						spr->palette = art_tile.palette + i.palette;
-						spr->priority = art_tile.priority ^ i.priority;
-						spr->x = x + i.x;
-						
-						//Link us to the sprite list
-						if (*prev != nullptr)
-							(*prev)->next = spr;
-						*prev = spr;
+						break;
 					}
-					break;
-				}
-				case 0x1: //01
-				{
-					for (auto &i : map_frame)
+					case 0x1: //01
 					{
-						//Construct a new sprite
-						SCPP::VDP::Sprite *spr;
-						if ((spr = new SCPP::VDP::Sprite()) == nullptr)
-							return true;
-						
-						//Fill with data from the mapping
+						spr->x = x - i.x - ((i.width + 1) * 8);
 						spr->y = y + i.y;
-						spr->width = i.width;
-						spr->height = i.height;
-						spr->pattern = art_tile.pattern + i.pattern;
 						spr->x_flip = !i.x_flip;
 						spr->y_flip = i.y_flip;
-						spr->palette = art_tile.palette + i.palette;
-						spr->priority = art_tile.priority ^ i.priority;
-						spr->x = x - i.x - ((i.width + 1) * 8);
-						
-						//Link us to the sprite list
-						if (*prev != nullptr)
-							(*prev)->next = spr;
-						*prev = spr;
+						break;
 					}
-					break;
-				}
-				case 0x2: //10
-				{
-					for (auto &i : map_frame)
+					case 0x2: //10
 					{
-						//Construct a new sprite
-						SCPP::VDP::Sprite *spr;
-						if ((spr = new SCPP::VDP::Sprite()) == nullptr)
-							return true;
-						
-						//Fill with data from the mapping
+						spr->x = x + i.x;
 						spr->y = y - i.y - ((i.height + 1) * 8);
-						spr->width = i.width;
-						spr->height = i.height;
-						spr->pattern = art_tile.pattern + i.pattern;
 						spr->x_flip = i.x_flip;
 						spr->y_flip = !i.y_flip;
-						spr->palette = art_tile.palette + i.palette;
-						spr->priority = art_tile.priority ^ i.priority;
-						spr->x = x + i.x;
-						
-						//Link us to the sprite list
-						if (*prev != nullptr)
-							(*prev)->next = spr;
-						*prev = spr;
+						break;
 					}
-					break;
-				}
-				case 0x3: //11
-				{
-					for (auto &i : map_frame)
+					case 0x3: //11
 					{
-						//Construct a new sprite
-						SCPP::VDP::Sprite *spr;
-						if ((spr = new SCPP::VDP::Sprite()) == nullptr)
-							return true;
-						
-						//Fill with data from the mapping
+						spr->x = x - i.x - ((i.width + 1) * 8);
 						spr->y = y - i.y - ((i.height + 1) * 8);
-						spr->width = i.width;
-						spr->height = i.height;
-						spr->pattern = art_tile.pattern + i.pattern;
 						spr->x_flip = !i.x_flip;
 						spr->y_flip = !i.y_flip;
-						spr->palette = art_tile.palette + i.palette;
-						spr->priority = art_tile.priority ^ i.priority;
-						spr->x = x - i.x - ((i.width + 1) * 8);
-						
-						//Link us to the sprite list
-						if (*prev != nullptr)
-							(*prev)->next = spr;
-						*prev = spr;
+						break;
 					}
-					break;
 				}
+				
+				//Link us to the sprite list
+				if (*prev != nullptr)
+					(*prev)->next = spr;
+				*prev = spr;
 			}
-			
 		}
 	}
 }
