@@ -375,7 +375,7 @@ namespace SCPP
 				SDL_Scancode scancode = generic_key_to_sdl_key[key];
 				if (keyboard_state == nullptr || scancode >= keyboard_states)
 					return false;
-				return keyboard_state[key];
+				return keyboard_state[scancode] != 0;
 			}
 		}
 	}

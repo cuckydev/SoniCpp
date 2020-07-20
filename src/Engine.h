@@ -46,7 +46,7 @@ namespace SCPP
 		{
 			private:
 				//Error
-				Error error;
+				SCPP::Error error;
 				
 				//Current configuration
 				Config config;

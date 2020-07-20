@@ -7,6 +7,9 @@ Purpose: Define the level game mode class
 Authors: Regan "cuckydev" Green
 */
 
+//Level
+#include "Level.h"
+
 //Declaration
 #include "GameMode.h"
 
@@ -37,6 +40,9 @@ namespace SCPP
 			
 			//Get system modules
 			SCPP::VDP::Instance &vdp = engine->GetVDP();
+			
+			//Create level instance
+			Level level(this);
 			
 			while (!event->HandleEvents())
 			{

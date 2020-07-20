@@ -36,14 +36,14 @@ namespace SCPP
 				public:
 					//Constructor and destructor
 					SDL2();
-					~SDL2();
+					~SDL2() override;
 					
 					//Event interface
-					bool HandleEvents();
+					bool HandleEvents() override;
 					
-					bool GetButtonState(size_t index, const GameControllerButton button);
-					float GetAxisState(size_t index, const GameControllerAxis axis);
-					bool GetKeyState(const KeyboardKey key);
+					bool GetButtonState(size_t index, const GameControllerButton button) override;
+					float GetAxisState(size_t index, const GameControllerAxis axis) override;
+					bool GetKeyState(const KeyboardKey key) override;
 			};
 		}
 	}

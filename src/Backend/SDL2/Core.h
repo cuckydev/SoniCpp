@@ -27,7 +27,7 @@ namespace SCPP
 				public:
 					//Constructor and destructor
 					SDL2();
-					~SDL2();
+					~SDL2() override;
 			};
 		}
 	}

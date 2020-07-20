@@ -95,9 +95,9 @@ namespace SCPP
 			if (vdp.Allocate(2048, 4))
 				return error.Push(vdp.GetError());
 			
-			//Initialize and run game (start with level game mode)
+			//Initialize and run game (start with game game mode)
 			if ((game_mode = new SCPP::Game::GameMode(this)) == nullptr)
-				return error.Push("Failed to create level game mode instance");
+				return error.Push("Failed to create game game mode instance");
 			
 			while (game_mode != nullptr)
 			{

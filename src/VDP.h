@@ -79,13 +79,13 @@ namespace SCPP
 			bool y_flip : 1;
 			
 			//Position and size
-			uint16_t x : 9;
-			uint16_t y : 10;
+			uint16_t x;
+			uint16_t y;
 			uint8_t width : 2;
 			uint8_t height : 2;
 			
 			//Next sprite (linked list)
-			Sprite *next;
+			Sprite *next = nullptr;
 		};
 		
 		//VDP instance class

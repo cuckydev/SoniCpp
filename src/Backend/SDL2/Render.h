@@ -43,16 +43,16 @@ namespace SCPP
 					//Constructors and destructor
 					SDL2() {}
 					SDL2(const Config &_config) { SetConfig(_config); }
-					~SDL2();
+					~SDL2() override;
 					
 					//Render interface
-					bool SetConfig(const Config &_config);
+					bool SetConfig(const Config &_config) override;
 					
-					void *StartFrame(unsigned int *pitch);
-					bool EndFrame();
+					void *StartFrame(unsigned int *pitch) override;
+					bool EndFrame() override;
 					
 				private:
-					//Internal things
+					//Internal internal
 					unsigned int GetDisplayMode(SDL_DisplayMode *mode, unsigned int framerate);
 			};
 		}

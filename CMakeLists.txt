@@ -23,6 +23,13 @@ add_executable(SoniCpp WIN32
 	"src/GameMode.h"
 	"src/Game/GameMode.cpp"
 	"src/Game/GameMode.h"
+	"src/Game/Mappings.cpp"
+	"src/Game/Mappings.h"
+	"src/Game/Level.cpp"
+	"src/Game/Level.h"
+	"src/Game/ObjectBase.cpp"
+	"src/Game/ObjectBase.h"
+	"src/Game/Object.h"
 	"src/Backend/Core.h"
 	"src/Backend/Render.h"
 	"src/Backend/Event.h"
@@ -37,6 +44,21 @@ set_target_properties(SoniCpp PROPERTIES
 	CXX_STANDARD_REQUIRED ON
 	CXX_EXTENSIONS OFF
 )
+
+##############################
+# Other compile-time defines #
+##############################
+
+# Determine endianness
+INCLUDE(TestBigEndian)
+TEST_BIG_ENDIAN(ENDIAN)
+if(ENDIAN)
+	message("Target is big-endian")
+	target_compile_definitions(SoniCpp PRIVATE SCPP_BIG_ENDIAN)
+else()
+	message("Target is little-endian")
+	target_compile_definitions(SoniCpp PRIVATE SCPP_LIL_ENDIAN)
+endif()
 
 ############
 # Backends #
